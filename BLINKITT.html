@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Blinkit — Full Clone (Single-file SPA)</title>
+<style>
+   :root{
+    --brand:#facc15; /* yellow */
+    --accent:#0aad0a; /* green */
+    --muted:#6b7280;
+    --card:#fff;
+    --bg:#f4f6f8;
+    --glass: rgba(255,255,255,0.6);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:#111}
+  a{color:inherit;text-decoration:none}
+  header{
+    position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;gap:16px;padding:12px 18px;box-shadow:0 6px 18px rgba(13,18,25,0.03);
+  }
+  .logo{font-weight:800;color:var(--brand);font-size:22px;margin-right:4px}
+  .loc{font-size:13px;color:var(--muted)}
+  .search{flex:1;display:flex;align-items:center}
+  .search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0}
+  .actions{display:flex;gap:10px;align-items:center}
+  .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:10px;font-weight:700;border:0;cursor:pointer}
+  .ghost{background:transparent;border:1px solid #eee;padding:8px 12px;border-radius:10px}
+
+  
+  .container{max-width:1200px;margin:18px auto;padding:0 18px}
+
+ 
+  .hero{display:flex;gap:20px;align-items:center}
+  .hero-left{flex:1}
+  .hero-card{background:linear-gradient(180deg, #fff 0%, #fff 60%);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.04)}
+  .hero h1{margin:0;font-size:24px}
+  .hero p{color:var(--muted);margin:8px 0}
+  .hero-right img{width:260px;border-radius:12px}
+
+ 
+  .cats{display:flex;gap:12px;overflow-x:auto;padding:14px 0}
+  .cat{min-width:130px;background:var(--card);padding:14px;border-radius:12px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.04);cursor:pointer}
+  .cat img{width:70px;height:70px;object-fit:contain}
+  .cat p{margin:8px 0 0;font-weight:700}
+
+ 
+  .section{margin-top:18px}
+  .section .title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+  .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04);display:flex;flex-direction:column}
+  .card img{width:100%;height:140px;object-fit:contain;border-radius:8px}
+  .card .name{font-weight:700;margin:8px 0 4px;font-size:14px;min-height:40px}
+  .card .meta{color:var(--muted);font-size:13px}
+  .price-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+  .price{font-weight:800;color:var(--accent)}
+  .add{border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:8px;font-weight:700;cursor:pointer}
+
+ 
+  .cart-drawer{position:fixed;right:12px;bottom:12px;width:360px;max-width:92vw;background:var(--card);box-shadow:0 30px 70px rgba(2,6,23,0.2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .cart-drawer .head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #eee}
+  .cart-list{padding:10px 14px;max-height:320px;overflow:auto}
+  .cart-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed #f0f0f0}
+  .cart-item img{width:54px;height:54px;object-fit:contain;border-radius:8px}
+  .cart-item .info{flex:1}
+  .qty{display:flex;gap:6px;align-items:center}
+  .checkout{padding:12px;background:#fafafa;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+
+  
+  .page{display:none}
+  .page.active{display:block}
+
+ 
+  form{display:flex;flex-direction:column;gap:10px}
+  input,select,textarea{padding:10px;border-radius:8px;border:1px solid #e6e9ef}
+  .input-row{display:flex;gap:10px}
+
+ 
+  footer{margin-top:30px;padding:28px 18px;text-align:center;color:var(--muted)}
+
+
+  @media (max-width:800px){
+    .hero{flex-direction:column}
+    .hero-right img{width:100%}
+    header{padding:10px}
+    .logo{font-size:20px}
+    .cart-drawer{width:96vw;right:2vw;bottom:8px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">blinkit</div>
+    <div class="loc">Delivering in <strong id="est">9 mins</strong></div>
+  </div>
+
+  <div class="search">
+    <input id="q" placeholder="Search for products, categories and brands..." onkeydown="if(event.key==='Enter')searchProducts()" />
+  </div>
+
+  <div class="actions">
+    <button class="ghost" onclick="navigate('login')">Login</button>
+    <button class="btn" id="cartBtn" onclick="toggleCart()">Cart (0)</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- HOME PAGE -->
+  <section id="home" class="page active">
+
+    <div class="hero">
+      <div class="hero-left hero-card">
+        <h1>Groceries delivered ultra-fast</h1>
+        <p>Essentials, fresh fruits & veg, dairy, snacks — delivered to your door in minutes.</p>
+        <div style="margin-top:8px"><button class="btn" onclick="document.querySelector('#q').focus()">Shop now</button></div>
+      </div>
+      <div class="hero-right"><img src="GROCERY.jpg" alt="banner"></div>
+    </div>
+
+    <!-- Categories -->
+    <div class="cats" style="margin-top:18px">
+      <div class="cat" onclick="filterBy('fruits')"><img src="FRUITS.jpg" alt="fruits"><p>Fruits</p></div>
+      <div class="cat" onclick="filterBy('veg')"><img src="vegetable.jpg" alt="veg"><p>Vegetables</p></div>
+      <div class="cat" onclick="filterBy('dairy')"><img src="dairy-products.jpg" alt="dairy"><p>Dairy</p></div>
+      <div class="cat" onclick="filterBy('snacks')"><img src="snacks.jpg" alt="snacks"><p>Snacks</p></div>
+      <div class="cat" onclick="filterBy('bakery')"><img src="bakery.jpg" alt="bakery"><p>Bakery</p></div>
+    </div>
+
+    <!-- Featured products -->
+    <div class="section">
+      <div class="title"><div style="font-weight:800">Popular near you</div><div style="color:var(--muted)">Recommended</div></div>
+      <div id="popular" class="grid"></div>
+    </div>
+
+    <!-- Offer / categories grid -->
+    <div class="section">
+      <div class="title"><div style="font-weight:800">Fresh & Fast</div><div style="color:var(--muted)">Deals of the day</div></div>
+      <div id="deals" class="grid"></div>
+    </div>
+
+  </section>
+
+  <!-- CATEGORY PAGE - shows filtered list -->
+  <section id="category" class="page">
+    <div class="section">
+      <div class="title"><div id="catTitle" style="font-weight:800">Category</div><div><button class="ghost" onclick="navigate('home')">Back</button></div></div>
+      <div id="catGrid" class="grid"></div>
+    </div>
+  </section>
+
+  <!-- PRODUCT DETAILS PAGE -->
+  <section id="product" class="page">
+    <div class="section">
+      <div class="title"><div id="pName" style="font-weight:800">Product</div><div><button class="ghost" onclick="navigate('home')">Back</button></div></div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px"><img id="pImg" src="" style="width:100%;border-radius:12px"/></div>
+        <div style="flex:1;min-width:260px">
+          <div id="pDesc" style="color:var(--muted);margin-bottom:8px"></div>
+          <div style="font-size:20px;font-weight:800;color:var(--accent)" id="pPrice">₹0</div>
+          <div style="margin-top:12px;display:flex;gap:8px"><button class="add" onclick="addToCart(currentProductId)">Add to cart</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CART PAGE (full page view) -->
+  <section id="cart" class="page">
+    <div class="section">
+      <div class="title"><div style="font-weight:800">Your Cart</div><div><button class="ghost" onclick="navigate('home')">Continue shopping</button></div></div>
+      <div id="cartView" style="background:var(--card);padding:12px;border-radius:12px"></div>
+      <div style="margin-top:12px;text-align:right"><button class="btn" onclick="navigate('checkout')">Proceed to Checkout</button></div>
+    </div>
+  </section>
+
+  <!-- CHECKOUT PAGE -->
+  <section id="checkout" class="page">
+    <div class="section">
+      <div class="title"><div style="font-weight:800">Checkout</div><div><button class="ghost" onclick="navigate('cart')">Back to cart</button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:18px">
+        <div style="background:var(--card);padding:12px;border-radius:12px">
+          <h3>Delivery details</h3>
+          <form id="checkoutForm" onsubmit="completeOrder(event)">
+            <input id="name" placeholder="Full name" required />
+            <input id="phone" placeholder="Phone" required />
+            <input id="addr" placeholder="Address" required />
+            <div class="input-row">
+              <input id="city" placeholder="City" required />
+              <input id="pincode" placeholder="Pincode" required />
+            </div>
+            <button class="btn" type="submit">Place order</button>
+          </form>
+        </div>
+        <div style="background:var(--card);padding:12px;border-radius:12px">
+          <h3>Order summary</h3>
+          <div id="summary"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN PAGE -->
+  <section id="login" class="page">
+    <div class="section" style="max-width:480px">
+      <div class="title"><div style="font-weight:800">Login / Signup</div><div><button class="ghost" onclick="navigate('home')">Close</button></div></div>
+      <div style="background:var(--card);padding:14px;border-radius:12px">
+        <form onsubmit="fakeLogin(event)">
+          <input id="em" placeholder="Email or phone" required />
+          <input id="pwd" placeholder="Password" required type="password" />
+          <div style="display:flex;gap:8px">
+            <button class="btn" type="submit">Login</button>
+            <button type="button" class="ghost" onclick="signupDemo()">Signup</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCOUNT PAGE (simple) -->
+  <section id="account" class="page">
+    <div class="section">
+      <div class="title"><div style="font-weight:800">My Account</div><div><button class="ghost" onclick="navigate('home')">Back</button></div></div>
+      <div style="background:var(--card);padding:14px;border-radius:12px;max-width:560px">
+        <p><strong id="acctName">Hello, Guest</strong></p>
+        <p id="acctEmail" style="color:var(--muted)"></p>
+        <div style="margin-top:10px"><button class="btn" onclick="logout()">Logout</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN PAGE (very small admin to add product) -->
+  <section id="admin" class="page">
+    <div class="section" style="max-width:760px">
+      <div class="title"><div style="font-weight:800">Admin — Add product</div><div><button class="ghost" onclick="navigate('home')">Home</button></div></div>
+      <div style="background:var(--card);padding:14px;border-radius:12px">
+        <form id="productForm" onsubmit="addProduct(event)">
+          <input id="p_title" placeholder="Product name" required />
+          <input id="p_cat" placeholder="Category (e.g. fruits,dairy)" required />
+          <input id="p_img" placeholder="Image URL" required />
+          <input id="p_price" placeholder="Price (number)" required type="number" />
+          <textarea id="p_desc" placeholder="Short description"></textarea>
+          <div style="display:flex;gap:8px"><button class="btn" type="submit">Add product</button><button type="button" class="ghost" onclick="populateSample()">Sample</button></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Blinkit Clone — Demo single-file app • For learning & UI practice only
+</footer>
+
+<!-- Floating cart drawer (small) -->
+<div id="cartDrawer" class="cart-drawer" style="display:none">
+  <div class="head"><strong>Cart</strong><button class="ghost" onclick="toggleCart(true)">Close</button></div>
+  <div class="cart-list" id="cartList"></div>
+  <div class="checkout"><div><strong id="miniTotal">₹0</strong><div style="color:var(--muted);font-size:12px">including taxes</div></div><div><button class="btn" onclick="navigate('cart');toggleCart(true)">View Cart</button></div></div>
+</div>
+
+<script>
+/* ---------- Sample product data ---------- */
+let products = [
+  {id:1,name:'Amul Milk 1L',cat:'dairy',price:74,img:'https://th.bing.com/th/id/R.f335bf227cef88510e637ffc4b5e3b9f?rik=8Hh6WEmj2qd7kA&riu=http%3a%2f%2fwww.dudhsagardairy.coop%2fwp-content%2fuploads%2f2014%2f04%2f1-Amul_Gold-1.jpg&ehk=7pE%2bc%2fAloqz5%2bOfClBWWYLrofKnlVImC70%2fLw3SVp0M%3d&risl=&pid=ImgRaw&r=0',desc:'Fresh cow milk'},
+  {id:2,name:'Pineapple (2 pcs)',cat:'fruits',price:129,img:'https://wallpapers.com/images/hd/pineapple-pictures-jcnc00xbupkq626z.jpg',desc:'Sweet Pineapple'},
+  {id:3,name:'Hide & Seek 250g',cat:'snacks',price:55,img:'https://ik.imagekit.io/wlfr/wellness/images/products/358123-1.jpg/tr:w-3840,c-at_max,cm-pad_resize,ar-1210-700,pr-true,f-auto,q-70,l-image,i-Wellness_logo_BDwqbQao9.png,lfo-bottom_right,w-200,h-90,c-at_least,cm-pad_resize,l-end',desc:'Classic biscuit'},
+  {id:4,name:'Fortune Oil 1L',cat:'grocery',price:445,img:'https://cdn.shopify.com/s/files/1/1857/6931/products/5pyLNveRVJ_1200x.jpg?v=1628334949',desc:'Refined oil'},
+  {id:5,name:'Mad Angles 250g',cat:'snacks',price:155,img:'https://s7ap1.scene7.com/is/image/itcportalprod/SecondaryBanner?fmt=webp-alpha',desc:'Tasty crackers'},
+  {id:6,name:'White Bread',cat:'bakery',price:78,img:'https://tse4.mm.bing.net/th/id/OIP.iCB_-oJstbbAzUbQiApaCgHaFp?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3',desc:'Soft sliced bread'},
+  {id:7,name:'Amul Cheese 200g',cat:'dairy',price:95,img:'https://m.media-amazon.com/images/I/71vM-znOuDL._SX522_.jpg',desc:'Fresh cottage cheese'},
+];
+
+/* ---------- App state ---------- */
+let cart = {}; // productId -> qty
+let currentProductId = null;
+
+/* ---------- Utils ---------- */
+function $(id){return document.getElementById(id)}
+function navigate(page){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(page).classList.add('active');window.scrollTo(0,0);renderPage(page)}
+
+/* ---------- Render functions ---------- */
+function renderProducts(list,containerId){const c=$(containerId);c.innerHTML='';list.forEach(p=>{const el=document.createElement('div');el.className='card';el.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="name">${p.name}</div><div class="meta">${p.desc}</div><div class="price-row"><div class="price">₹${p.price}</div><div><button class="add" onclick="viewProduct(${p.id})">View</button></div></div>`;c.appendChild(el)});
+}
+
+function renderHome(){renderProducts(products.slice(0,6),'popular');renderProducts(products.slice(2,6),'deals');updateCartButton()}
+
+function filterBy(cat){const list=products.filter(p=>p.cat===cat);renderProducts(list,'catGrid');$('catTitle').innerText=cat.charAt(0).toUpperCase()+cat.slice(1);navigate('category')}
+
+function searchProducts(){const q=$('q').value.trim().toLowerCase();const list=products.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q));renderProducts(list,'catGrid');$('catTitle').innerText=`Search: "${q}"`;navigate('category')}
+
+function viewProduct(id){const p=products.find(x=>x.id===id);if(!p) return;currentProductId=id;$('pName').innerText=p.name;$('pImg').src=p.img;$('pDesc').innerText=p.desc;$('pPrice').innerText='₹'+p.price;navigate('product')}
+
+/* ---------- Cart functions ---------- */
+function addToCart(id,qty=1){cart[id]=(cart[id]||0)+qty;saveCart();toast('Added to cart');updateCartButton();renderMiniCart()}
+function removeFromCart(id){delete cart[id];saveCart();updateCartButton();renderMiniCart();renderCartView()}
+function changeQty(id,delta){cart[id]=Math.max(0,(cart[id]||0)+delta);if(cart[id]===0) delete cart[id];saveCart();updateCartButton();renderMiniCart();renderCartView()}
+
+function saveCart(){localStorage.setItem('bk_cart',JSON.stringify(cart))}
+function loadCart(){const raw=localStorage.getItem('bk_cart');if(raw) cart=JSON.parse(raw)}
+
+function updateCartButton(){const count=Object.values(cart).reduce((a,b)=>a+b,0);$('cartBtn').innerText=`Cart (${count})`}
+
+function toggleCart(hide=false){const d=$('cartDrawer');if(hide){d.style.display='none';return}d.style.display=d.style.display==='none'?'flex':'none';renderMiniCart()}
+
+function renderMiniCart(){const list=$('cartList');list.innerHTML='';let total=0;for(const id in cart){const p=products.find(x=>x.id==id);const qty=cart[id];if(!p) continue;total+=p.price*qty;const item=document.createElement('div');item.className='cart-item';item.innerHTML=`<img src="${p.img}"><div class="info"><div style=\"font-weight:700\">${p.name}</div><div style=\"color:var(--muted)\">₹${p.price} x ${qty} = ₹${p.price*qty}</div></div><div style=\"display:flex;flex-direction:column;justify-content:center;gap:6px\"><div class=\"qty\"><button onclick=\"changeQty(${id},-1)\">-</button><div style=\"min-width:24px;text-align:center\">${qty}</div><button onclick=\"changeQty(${id},1)\">+</button></div><button onclick=\"removeFromCart(${id})\" style=\"margin-top:6px;border:none;background:transparent;color:var(--muted);cursor:pointer\">Remove</button></div>`;list.appendChild(item)}$('miniTotal').innerText='₹'+total.toFixed(2);} 
+
+function renderCartView(){const v=$('cartView');v.innerHTML='';let total=0;for(const id in cart){const p=products.find(x=>x.id==id);const qty=cart[id];if(!p) continue;total+=p.price*qty;const row=document.createElement('div');row.style.display='flex';row.style.gap='12px';row.style.alignItems='center';row.style.padding='10px 0';row.innerHTML=`<img src="${p.img}" style=\"width:84px;height:84px;object-fit:contain;border-radius:8px\"><div style=\"flex:1\"><div style=\"font-weight:800\">${p.name}</div><div style=\"color:var(--muted)\">₹${p.price} x ${qty} = ₹${p.price*qty}</div></div><div style=\"display:flex;flex-direction:column;gap:6px\"><div class=\"qty\"><button onclick=\"changeQty(${id},-1)\">-</button><div style=\"min-width:36px;text-align:center\">${qty}</div><button onclick=\"changeQty(${id},1)\">+</button></div><button class=\"ghost\" onclick=\"removeFromCart(${id})\">Remove</button></div>`;v.appendChild(row)}const footer=document.createElement('div');footer.style.textAlign='right';footer.style.marginTop='12px';footer.innerHTML=`<div style=\"font-weight:800;font-size:18px\">Total: ₹${total.toFixed(2)}</div>`;v.appendChild(footer)}
+
+/* ---------- Checkout & Orders ---------- */
+function renderSummary(){const el=$('summary');let total=0;el.innerHTML='';for(const id in cart){const p=products.find(x=>x.id==id);const qty=cart[id];if(!p) continue;total+=p.price*qty;const r=document.createElement('div');r.style.display='flex';r.style.justifyContent='space-between';r.style.padding='6px 0';r.innerHTML=`<div>${p.name} x ${qty}</div><div>₹${(p.price*qty).toFixed(2)}</div>`;el.appendChild(r)}const t=document.createElement('div');t.style.display='flex';t.style.justifyContent='space-between';t.style.fontWeight='800';t.style.marginTop='8px';t.innerHTML=`<div>Total</div><div>₹${total.toFixed(2)}</div>`;el.appendChild(t)}
+
+function completeOrder(e){e.preventDefault();if(Object.keys(cart).length===0){alert('Your cart is empty');navigate('home');return}const data={name:$('name').value,phone:$('phone').value,addr:$('addr').value,city:$('city').value,pincode:$('pincode').value};console.log('ORDER',data,cart);localStorage.removeItem('bk_cart');cart={};saveCart();updateCartButton();renderMiniCart();renderCartView();alert('Order placed! (demo)');navigate('home')}
+
+/* ---------- Auth (fake) ---------- */
+function fakeLogin(e){e.preventDefault();const em=$('em').value;localStorage.setItem('bk_user',JSON.stringify({name:em,email:em}));$('acctName').innerText='Hello, '+em;$('acctEmail').innerText=em;navigate('account')}
+function signupDemo(){alert('Signup demo — just login with a value');}
+function logout(){localStorage.removeItem('bk_user');$('acctName').innerText='Hello, Guest';$('acctEmail').innerText='';navigate('home')}
+
+/* ---------- Admin add product (demo) ---------- */
+function addProduct(e){e.preventDefault();const p={id:Date.now(),name:$('p_title').value,cat:$('p_cat').value,price:parseFloat($('p_price').value),img:$('p_img').value,desc:$('p_desc').value};products.unshift(p);alert('Product added');$('productForm').reset();renderHome();navigate('home')}
+function populateSample(){ $('p_title').value='Sample Mango';$('p_cat').value='fruits';$('p_price').value='120';$('p_img').value='https://images.unsplash.com/photo-1574226516831-e1dff420e8f8?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=2b7f4f1b4cd4';$('p_desc').value='Sweet mangoes (demo)'}
+
+/* ---------- Small UI helpers ---------- */
+function toast(msg){const t=document.createElement('div');t.innerText=msg;t.style.position='fixed';t.style.right='14px';t.style.bottom='90px';t.style.background='rgba(0,0,0,0.8)';t.style.color='#fff';t.style.padding='10px 12px';t.style.borderRadius='8px';t.style.zIndex=9999;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+
+function viewCart(){navigate('cart')}
+
+/* ---------- Lifecycle ---------- */
+function renderPage(page){if(page==='home'){renderHome()} if(page==='cart'){renderCartView()} if(page==='checkout'){renderSummary()} if(page==='account'){const u=localStorage.getItem('bk_user');if(u){const obj=JSON.parse(u);$('acctName').innerText='Hello, '+obj.name;$('acctEmail').innerText=obj.email}else{$('acctName').innerText='Hello, Guest';$('acctEmail').innerText=''}}}
+
+loadCart();renderHome();renderMiniCart();updateCartButton();
+
+// Small keyboard shortcut: / to focus search
+window.addEventListener('keydown',e=>{if(e.key=='/'){$('q').focus();e.preventDefault()}})
+
+</script>
+
+</body>
+</html>
